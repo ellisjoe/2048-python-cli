@@ -8,6 +8,7 @@ class board:
         self.stdscr = stdscr
         self.num_rows = num_rows
         self.num_cols = num_cols
+        self.score = 0
 
         self.tiles = [tile(row, col) for row in range(num_rows) for col in range(num_cols)]
 
@@ -129,6 +130,7 @@ class board:
             cur_tile = nearest_tile
             moved = True
             merged = True
+            self.score += cur_tile.value
 
         elif (nearest_tile.value == 0):
             nearest_tile.set_value(cur_tile.value)
@@ -160,9 +162,11 @@ class board:
                 row_tiles.append(self.get_tile(row, col).render())
 
             for i in range(len(row_tiles[0])):
-                stdscr.move(row * len(row_tiles[0]) + i, 0)
+                self.stdscr.move(row * len(row_tiles[0]) + i, 0)
                 cur_row = [t[i] for t in row_tiles]
-                stdscr.addstr(' '.join(cur_row))
+                self.stdscr.addstr(' '.join(cur_row))
+
+        self.stdscr.addstr(self.height(), 0, "Score: " + str(self.score))
 
 
 
@@ -243,7 +247,7 @@ def new_game(stdscr):
             if (b.check_lose()):
                 break
 
-    stdscr.addstr(b.height(), 0, "Game Over. Play again? (Y/N)")
+    stdscr.addstr(b.height() + 1, 0, "Game Over. Play again? (Y/N)")
     key = 0
     while (key != 'Y' and key != 'N'):
         key = stdscr.getkey()
@@ -254,18 +258,6 @@ def new_game(stdscr):
     if (key == 'Y'):
         new_game(stdscr)
 
-
-
 if (__name__ == '__main__'):
-    stdscr = curses.initscr()
-    stdscr.keypad(True)
-    curses.noecho()
-    curses.curs_set(False)
-
-    new_game(stdscr)
-
-    stdscr.keypad(False)
-    curses.echo()
-    curses.curs_set(True)
-    curses.endwin()
+    curses.wrapper(new_game)
     
