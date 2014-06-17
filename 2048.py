@@ -1,6 +1,8 @@
 import random
 import os
 import curses
+import getopt
+import sys
 
 class board:
 
@@ -27,6 +29,8 @@ class board:
         empty[int(random.random() * 1000) % len(empty)].set_value(value)
 
     def get_tile(self, row, col):
+        if (row < 0 or row >= self.num_rows or col < 0 or col >= self.num_cols):
+            return None
         return self.tiles[row * self.num_cols + col]
 
     def set_tile(self, row, col, tile):
@@ -44,12 +48,23 @@ class board:
         if (len(empty) > 0):
             return False
 
-        copied = self.copy()
+        for row in range(self.num_rows):
+            for col in range(self.num_cols):
+                cur = self.get_tile(row, col).value
 
-        if (copied.move_left() > 0 or copied.move_right() > 0
-                or copied.move_down() > 0 or copied.move_up() > 0):
-            return False
+                down = self.get_tile(row - 1, col)
+                up = self.get_tile(row + 1, col)
+                left = self.get_tile(row, col - 1)
+                right = self.get_tile(row, col + 1)
 
+                if (down and down.value == cur):
+                    return False
+                if (up and up.value == cur):
+                    return False
+                if (left and left.value == cur):
+                    return False
+                if (right and right.value == cur):
+                    return False
         return True
 
     def move_left(self):
@@ -225,8 +240,8 @@ class tile:
         return line
 
 
-def new_game(stdscr):
-    b = board(stdscr)
+def new_game(stdscr, rows = 4, cols = 4):
+    b = board(stdscr, rows, cols)
     b.render()
     
     while True:
@@ -252,12 +267,25 @@ def new_game(stdscr):
     while (key != 'Y' and key != 'N'):
         key = stdscr.getkey()
 
-    stdscr.move(b.height(), 0)
-    stdscr.clrtoeol()
+    stdscr.clear()
 
     if (key == 'Y'):
         new_game(stdscr)
 
 if (__name__ == '__main__'):
-    curses.wrapper(new_game)
+    rows = 4
+    cols = 4
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "r:c:")
+    except getopt.GetoptError:
+        print('2048.py -r <rows> -c <cols>')
+        sys.exit(1)
+
+    for opt, arg in opts:
+        if opt == '-r':
+            rows = int(arg)
+        elif opt == '-c':
+            cols = int(arg)
+
+    curses.wrapper(new_game, rows, cols)
     
